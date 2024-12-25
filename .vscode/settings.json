@@ -1,0 +1,6 @@
+{
+    "python.analysis.extraPaths": [
+        "./pybluez"
+    ],
+    "git.ignoreLimitWarning": true
+}
