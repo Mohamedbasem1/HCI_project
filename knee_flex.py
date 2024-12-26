@@ -18,7 +18,7 @@ FLEXION_THRESHOLD = 90  # Knee flexion angle (less than this is a correct flexio
 EXTENSION_THRESHOLD = 170  # Knee extension angle (close to this is a correct extension)
 
 # Start video capture
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(2)
 if not cap.isOpened():
     print("Error: Unable to access the camera.")
     exit()

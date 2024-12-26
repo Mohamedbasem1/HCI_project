@@ -322,4 +322,12 @@ async def discover_bluetooth_devices():
 
 if __name__ == '__main__':
     print("Starting the Flask server...")  # Add this line for debugging
+    
+    # Start lazer.py script
+    try:
+        subprocess.Popen([sys.executable, 'lazer.py'])
+        print("Started lazer.py script")
+    except Exception as e:
+        print(f"Failed to start lazer.py script: {e}")
+    
     socketio.run(app, debug=True)

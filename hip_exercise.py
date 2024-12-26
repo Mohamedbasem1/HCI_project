@@ -3,18 +3,15 @@ import cv2
 import time
 
 # Initialize the webcam
-cap = cv2.VideoCapture(0)  # Change `0` to another number if you have multiple webcams
+cap = cv2.VideoCapture(2)  
 
-# Check if the webcam is opened correctly
 if not cap.isOpened():
     print("Error: Cannot access the webcam")
     exit()
 
-# Load the trained YOLO model
 model = YOLO(r"bestmodel.pt")  # Replace 'bestmodel.pt' with the path to your model file
 print("Model loaded successfully!")
 
-# Initialize variables
 success_count = 0
 class_id_1 = 0  # Replace with the actual class ID for the first class
 class_id_2 = 1  # Replace with the actual class ID for the second class
@@ -43,7 +40,6 @@ while True:
         for box in results[0].boxes:
             class_id = int(box.cls)
             label = results[0].names[class_id]
-            print(label)  # Debugging: Print detected labels
             detected_classes.add(class_id)
 
     # Check if both classes are detected

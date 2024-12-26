@@ -4,12 +4,50 @@ import time
 import pyautogui
 import mediapipe as mp
 from deepface import DeepFace  # type: ignore
+from dollarpy import Recognizer, Template, Point
+import csv
 
-cap = cv2.VideoCapture(0)
-
+# Initialize Mediapipe hands
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()
 mp_draw = mp.solutions.drawing_utils
+
+# Load gesture templates from a CSV file
+def load_templates_from_csv(csv_file_path):
+    loaded_templates = []
+    current_gesture = None
+    current_points = []
+
+    with open(csv_file_path, mode='r') as file:
+        reader = csv.reader(file)
+        next(reader)  # Skip the header row
+
+        for row in reader:
+            gesture_name, point_index, x, y = row[0], int(row[1]), float(row[2]), float(row[3])
+            point = Point(x, y)
+
+            if current_gesture != gesture_name:
+                if current_gesture is not None:
+                    loaded_templates.append(Template(current_gesture, current_points))
+                current_gesture = gesture_name
+                current_points = [point]
+            else:
+                current_points.append(point)
+
+        # Add the last gesture template
+        if current_gesture is not None:
+            loaded_templates.append(Template(current_gesture, current_points))
+
+    print("Templates loaded from CSV:", len(loaded_templates))
+    return loaded_templates
+
+# Path to the CSV file with gesture templates
+csv_file_path = 'gesture.csv'
+loaded_templates = load_templates_from_csv(csv_file_path)
+recognizer = Recognizer(loaded_templates)
+
+# Initialize video capture
+cap = cv2.VideoCapture(0)
 
 light_pattern = []
 finger_positions = []
@@ -18,8 +56,12 @@ finger_positions = []
 laser_detected = False
 laser_positions = []  # Track laser positions over time
 
-while(1):
-    flag , background = cap.read()
+while True:
+    flag, background = cap.read()
+
+    if not flag:
+        print("Failed to capture frame. Exiting...")
+        break
 
     hsv_frame = cv2.cvtColor(background, cv2.COLOR_BGR2HSV)
 
@@ -123,6 +165,29 @@ while(1):
                     finger_positions.clear()  # Clear positions after left-click
 
         mp_draw.draw_landmarks(background, hand_landmarks, mp_hands.HAND_CONNECTIONS)
+
+        # Recognize hand gestures
+        points = [Point(hand_landmarks.landmark[i].x, hand_landmarks.landmark[i].y) for i in range(21)]
+        all_points = points
+
+        # Perform recognition on the current frame
+        if all_points:
+            result = recognizer.recognize(all_points)
+            recognized_gesture = "No Gesture"
+            score = None
+
+            if result and isinstance(result[0], Template):
+                recognized_gesture = result[0].name
+                score = f"Score: {result[0].score:.2f}"
+            elif result:
+                recognized_gesture = result
+
+            # Display recognized gesture on the frame
+            cv2.putText(background, f"Gesture: {recognized_gesture}", (10, 40),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2, cv2.LINE_AA)
+            if score:
+                cv2.putText(background, score, (10, 80),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
     # Emotion detection and display
     face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
