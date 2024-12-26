@@ -17,6 +17,12 @@ async def send_tuio_id(tuio_id):
     async with aiohttp.ClientSession() as session:
         async with session.post('http://localhost:5000/api/tuio_event', json={'tuio_id': tuio_id}) as response:
             print(f"Sent TUIO ID: {tuio_id} to server, response: {response.status}")
+            if response.status == 200:
+                data = await response.json()
+                if data.get('type') == 'kid':
+                    print(f"Redirecting to kid exercises for TUIO ID: {tuio_id}")
+                else:
+                    print(f"Redirecting to patient exercises for TUIO ID: {tuio_id}")
 
 async def send_marker_id(marker_id):
     async with aiohttp.ClientSession() as session:
