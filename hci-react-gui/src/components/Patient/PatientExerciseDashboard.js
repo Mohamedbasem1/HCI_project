@@ -16,6 +16,7 @@ const StyledCard = styled(Card)(({ theme }) => ({
   '&:hover': {
     boxShadow: theme.shadows[6],
   },
+  backgroundColor: theme.palette.background.paper,
 }));
 
 const StyledButton = styled(Button)(({ theme }) => ({
@@ -25,6 +26,24 @@ const StyledButton = styled(Button)(({ theme }) => ({
     backgroundColor: theme.palette.primary.dark,
     transform: 'scale(1.05)',
   },
+}));
+
+const KidStyledCard = styled(Card)(({ theme }) => ({
+  transition: 'box-shadow 0.3s',
+  '&:hover': {
+    boxShadow: theme.shadows[6],
+  },
+  backgroundColor: 'rgba(255, 255, 255, 0.8)', // Semi-transparent white background for text visibility
+}));
+
+const KidStyledButton = styled(Button)(({ theme }) => ({
+  borderRadius: 20,
+  transition: 'background-color 0.3s, transform 0.3s',
+  '&:hover': {
+    backgroundColor: '#ff5722', // Kid-friendly hover color
+    transform: 'scale(1.05)',
+  },
+  backgroundColor: '#ff5722', // Kid-friendly color
 }));
 
 const PatientExerciseDashboard = () => {
@@ -134,12 +153,14 @@ const PatientExerciseDashboard = () => {
     );
   }
 
+  const isKid = patient.type === 'kid';
+
   return (
     <Box display="flex" flexDirection="column" height="100vh">
       <AppBar position="static" style={{ background: '#5c67f2' }}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            Patient Exercise Dashboard
+            {isKid ? 'Kid Exercise Dashboard' : 'Patient Exercise Dashboard'}
           </Typography>
           <StyledButton
             variant="contained"
@@ -152,77 +173,117 @@ const PatientExerciseDashboard = () => {
         </Toolbar>
       </AppBar>
       
-      <Container maxWidth="md" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        <Box my={4} flexGrow={1}>
-          <Typography variant="h4" gutterBottom>
-            {patient.name}'s Exercise Plan
-          </Typography>
-          <Typography variant="h6" gutterBottom>
-            Injury: {patient.injury}
-          </Typography>
-          <Typography variant="h6" gutterBottom>
-            You have {exercises.length} exercise{exercises.length !== 1 && 's'} today
-          </Typography>
-          {exercises.length > 0 && (
-            <Grid container spacing={4} sx={{ flexGrow: 1 }}>
-              <Grid item xs={12} sx={{ flexGrow: 1 }}>
-                <StyledCard sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                  <CardMedia
-                    component="video"
-                    controls
-                    muted
-                    src={`http://localhost:5000/${exercises[currentExerciseIndex].video_url}`}
-                    title={exercises[currentExerciseIndex].name}
-                    sx={{ flexGrow: 1 }}
-                  />
-                  <CardContent>
-                    <Typography variant="h5" component="div">
-                      {exercises[currentExerciseIndex].name}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {exercises[currentExerciseIndex].description}
-                    </Typography>
-                    <Typography variant="body1" component="div">
-                      Sets: {exercises[currentExerciseIndex].sets}
-                    </Typography>
-                    <Typography variant="body1" component="div">
-                      Reps: {exercises[currentExerciseIndex].reps}
-                    </Typography>
-                    <Box mt={2}>
-                      <StyledButton variant="contained" color="primary" onClick={handlePerformExercise}>
-                        Perform Exercise
-                      </StyledButton>
-                      {exerciseResult && (
-                        <Typography variant="body1" mt={2}>
-                          Result: {exerciseResult}
+      <Box flexGrow={1} sx={{ backgroundImage: isKid ? 'url(/bgcartoon.png)' : 'none', backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center', minHeight: '110vh', mt: 0.1 }}>
+        <Container maxWidth="md" sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          <Box my={4} flexGrow={1}>
+            <Typography variant="h4" gutterBottom>
+              {patient.name}'s Exercise Plan
+              
+            </Typography>
+            <Typography variant="h6" gutterBottom>
+              Injury: {patient.injury}
+            </Typography>
+            <Typography variant="h6" gutterBottom>
+              You have {exercises.length} exercise{exercises.length !== 1 && 's'} today
+            </Typography>
+            {exercises.length > 0 && (
+              <Grid container spacing={4} sx={{ flexGrow: 1 }}>
+                <Grid item xs={12} sx={{ flexGrow: 1 }}>
+                  {isKid ? (
+                    <KidStyledCard sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                      <CardMedia
+                        component="video"
+                        controls
+                        muted
+                        src={`http://localhost:5000/${exercises[currentExerciseIndex].video_url}`}
+                        title={exercises[currentExerciseIndex].name}
+                        sx={{ flexGrow: 1 }}
+                      />
+                      <CardContent>
+                        <Typography variant="h5" component="div">
+                          {exercises[currentExerciseIndex].name}
                         </Typography>
-                      )}
-                    </Box>
-                  </CardContent>
-                </StyledCard>
+                        <Typography variant="body2" color="textSecondary">
+                          {exercises[currentExerciseIndex].description}
+                        </Typography>
+                        <Typography variant="body1" component="div">
+                          Sets: {exercises[currentExerciseIndex].sets}
+                        </Typography>
+                        <Typography variant="body1" component="div">
+                          Reps: {exercises[currentExerciseIndex].reps}
+                        </Typography>
+                        <Box mt={2}>
+                          <KidStyledButton variant="contained" color="primary" onClick={handlePerformExercise}>
+                            Perform Exercise
+                          </KidStyledButton>
+                          {exerciseResult && (
+                            <Typography variant="body1" mt={2}>
+                              Result: {exerciseResult}
+                            </Typography>
+                          )}
+                        </Box>
+                      </CardContent>
+                    </KidStyledCard>
+                  ) : (
+                    <StyledCard sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                      <CardMedia
+                        component="video"
+                        controls
+                        muted
+                        src={`http://localhost:5000/${exercises[currentExerciseIndex].video_url}`}
+                        title={exercises[currentExerciseIndex].name}
+                        sx={{ flexGrow: 1 }}
+                      />
+                      <CardContent>
+                        <Typography variant="h5" component="div">
+                          {exercises[currentExerciseIndex].name}
+                        </Typography>
+                        <Typography variant="body2" color="textSecondary">
+                          {exercises[currentExerciseIndex].description}
+                        </Typography>
+                        <Typography variant="body1" component="div">
+                          Sets: {exercises[currentExerciseIndex].sets}
+                        </Typography>
+                        <Typography variant="body1" component="div">
+                          Reps: {exercises[currentExerciseIndex].reps}
+                        </Typography>
+                        <Box mt={2}>
+                          <StyledButton variant="contained" color="primary" onClick={handlePerformExercise}>
+                            Perform Exercise
+                          </StyledButton>
+                          {exerciseResult && (
+                            <Typography variant="body1" mt={2}>
+                              Result: {exerciseResult}
+                            </Typography>
+                          )}
+                        </Box>
+                      </CardContent>
+                    </StyledCard>
+                  )}
+                </Grid>
+                <Grid item xs={12} display="flex" justifyContent="space-between">
+                  <StyledButton
+                    variant="contained"
+                    color="primary"
+                    disabled={currentExerciseIndex === 0}
+                    onClick={handlePreviousExercise}
+                  >
+                    Previous
+                  </StyledButton>
+                  <StyledButton
+                    variant="contained"
+                    color="primary"
+                    disabled={currentExerciseIndex === exercises.length - 1}
+                    onClick={handleNextExercise}
+                  >
+                    Next
+                  </StyledButton>
+                </Grid>
               </Grid>
-              <Grid item xs={12} display="flex" justifyContent="space-between">
-                <StyledButton
-                  variant="contained"
-                  color="primary"
-                  disabled={currentExerciseIndex === 0}
-                  onClick={handlePreviousExercise}
-                >
-                  Previous
-                </StyledButton>
-                <StyledButton
-                  variant="contained"
-                  color="primary"
-                  disabled={currentExerciseIndex === exercises.length - 1}
-                  onClick={handleNextExercise}
-                >
-                  Next
-                </StyledButton>
-              </Grid>
-            </Grid>
-          )}
-        </Box>
-      </Container>
+            )}
+          </Box>
+        </Container>
+      </Box>
 
       {/* Gesture Control Integration */}
       <GestureControl 

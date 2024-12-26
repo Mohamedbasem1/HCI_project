@@ -84,7 +84,7 @@ const CircularMenu = ({
   open,
   handleClose,
   handleEditPatient,
-  handleDeletePatient, // Change to handleDeletePatient
+  handleDeletePatient, 
   selectedMenuButton, // Add selectedMenuButton prop
   setSelectedMenuButton, // Add setSelectedMenuButton prop
 }) => {
@@ -92,7 +92,7 @@ const CircularMenu = ({
     const handleRotateEvent = (event) => {
       const { direction } = event.detail;
       if (direction === 'rotate_left') {
-        setSelectedMenuButton((prevButton) => (prevButton - 1 + 3) % 3);
+        setSelectedMenuButton((prevButton) => (prevButton - 1 ) % 3);
       } else if (direction === 'rotate_right') {
         setSelectedMenuButton((prevButton) => (prevButton + 1) % 3);
       }

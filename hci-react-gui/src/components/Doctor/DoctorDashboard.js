@@ -19,6 +19,7 @@ const brighterBorderColor = '#ffcc80'; // Adjust the brighter border color accor
 const buttonHoverColor = '#ff5722'; // Change to a different hover color (e.g., deep orange)
 const animationDuration = '0.3s'; // Define animation duration
 const hoverBorderColor = '#42a5f5'; // Define a light blue hover border color
+const strongHoverColor = '#ff7043'; // Define a strong hover color
 
 const StyledTableRow = styled(TableRow)(({ theme }) => ({
   '&:nth-of-type(odd)': {
@@ -37,7 +38,7 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
     border: `2px solid ${hoverAndSelectedColor}`, // Border for selected row
   },
   '&.Mui-hovered, &.Mui-focused': { // Add hover and focus color
-    backgroundColor: theme.palette.action.hover,
+    backgroundColor: strongHoverColor, // Use strong hover color
     border: `2px solid ${hoverBorderColor}`, // Light blue border color for hovered row
     transition: `border ${animationDuration} ease-in-out`, // Add animation
   },
@@ -55,12 +56,17 @@ const StyledButton = styled(Button)(({ theme }) => ({
     border: `2px solid ${hoverBorderColor}`, // Light blue border color for selected button
     transition: `border ${animationDuration} ease-in-out`, // Add animation
   },
+  '&.Mui-hovered, &.Mui-focused': {
+    backgroundColor: strongHoverColor, // Use strong hover color
+    border: `2px solid ${hoverBorderColor}`,
+    transition: `border ${animationDuration} ease-in-out`,
+  },
 }));
 
 const DoctorDashboard = () => {
   const [patients, setPatients] = useState([]);
   const [currentPatientId, setCurrentPatientId] = useState(null);
-  const [newPatient, setNewPatient] = useState({ name: '', injury: '', exercises: [] });
+  const [newPatient, setNewPatient] = useState({ name: '', injury: '', exercises: [], type: '' }); // Add type field
   const [injuries, setInjuries] = useState([]);
   const [filteredExercises, setFilteredExercises] = useState([]);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -364,7 +370,8 @@ const DoctorDashboard = () => {
           name: response.data.name,
           tuio_id: response.data.tuio_id,
           injury: '',
-          exercises: []
+          exercises: [],
+          type: '' // Add type field
         });
         setOpen(true);
         setSelectedFormElement('injury'); // Set initial form element to 'injury'
@@ -381,7 +388,7 @@ const DoctorDashboard = () => {
     setOpen(false);
     setIsEditing(false);
     setCurrentPatientId(null);
-    setNewPatient({ name: '', injury: '', exercises: [] });
+    setNewPatient({ name: '', injury: '', exercises: [], type: '' }); // Add type field
     setSelectedFormElement(null); // Reset form element selection
   };
 
@@ -414,8 +421,8 @@ const DoctorDashboard = () => {
   };
 
   const handleAddPatient = () => {
-    if (!newPatient.name || !newPatient.injury || !newPatient.exercises.length || !imageFile) {
-      setSnackbarMessage('Please fill in all fields and select at least one exercise and an image.');
+    if (!newPatient.name || !newPatient.injury || !newPatient.exercises.length || !imageFile || !newPatient.type) {
+      setSnackbarMessage('Please fill in all fields, select at least one exercise, an image, and specify the patient type.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
       return;
@@ -433,6 +440,7 @@ const DoctorDashboard = () => {
     patientData.append('injury', newPatient.injury);
     patientData.append('exercises', newPatient.exercises.join(','));
     patientData.append('image', imageFile); // Append image file
+    patientData.append('type', newPatient.type); // Append patient type
   
     axios.post('http://localhost:5000/api/patients', patientData, {
       headers: {
@@ -446,7 +454,7 @@ const DoctorDashboard = () => {
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
         setOpen(false); // Close the modal after successful operation
-        setNewPatient({ name: '', injury: '', exercises: [] }); // Reset form
+        setNewPatient({ name: '', injury: '', exercises: [], type: '' }); // Reset form
         setImageFile(null); // Reset image file
       })
       .catch(error => {
@@ -468,7 +476,8 @@ const DoctorDashboard = () => {
     setNewPatient({
       name: patient.name,
       injury: patient.injury,
-      exercises: patient.exercises.map(ex => ex.name) // Ensure exercises are mapped correctly
+      exercises: patient.exercises.map(ex => ex.name), // Ensure exercises are mapped correctly
+      type: patient.type // Add type field
     });
     const selectedInjury = injuries.find(injury => injury.name === patient.injury);
     if (selectedInjury) {
@@ -525,7 +534,7 @@ const DoctorDashboard = () => {
         setOpen(false); // Close the modal after successful operation
         setIsEditing(false);
         setCurrentPatientId(null);
-        setNewPatient({ name: '', injury: '', exercises: [] }); // Reset form
+        setNewPatient({ name: '', injury: '', exercises: [], type: '' }); // Reset form
     })
     .catch(error => {
         console.error('Error updating patient:', error);
@@ -604,6 +613,7 @@ const DoctorDashboard = () => {
             startIcon={<HomeIcon />}
             onClick={() => navigate('/')}
             sx={{ borderRadius: 20 }}
+            className={selectedElement === 'home' ? 'Mui-hovered' : ''} // Add strong hover color
           >
             Home
           </StyledButton>
@@ -629,6 +639,7 @@ const DoctorDashboard = () => {
             startIcon={<AddIcon />}
             onClick={handleClickOpen}
             fullWidth
+            className={selectedElement === 'addPatient' ? 'Mui-hovered' : ''} // Add strong hover color
           >
             Add Patient
           </StyledButton>
@@ -643,6 +654,7 @@ const DoctorDashboard = () => {
                 <TableCell>Injury</TableCell>
                 <TableCell>Exercises</TableCell>
                 <TableCell>TUIO ID</TableCell> {/* Add TUIO ID header */}
+                <TableCell>Type</TableCell> {/* Add Type header */}
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -659,6 +671,7 @@ const DoctorDashboard = () => {
                   <TableCell>{patient.injury}</TableCell>
                   <TableCell>{patient.exercises.map(ex => ex.name).join(', ')}</TableCell>
                   <TableCell>{patient.tuio_id}</TableCell> {/* Add TUIO ID cell */}
+                  <TableCell>{patient.type}</TableCell> {/* Add Type cell */}
                   <TableCell>
                     <IconButton color="primary" onClick={() => handleMenuOpen(patient)}>
                       <MoreVertIcon />
@@ -733,6 +746,19 @@ const DoctorDashboard = () => {
               ))}
             </Select>
           </FormControl>
+          <TextField
+            select
+            margin="dense"
+            label="Patient Type"
+            name="type"
+            fullWidth
+            value={newPatient.type}
+            onChange={handleChange}
+          >
+            <MenuItem value="kid">Kid</MenuItem>
+            <MenuItem value="elderly">Elderly</MenuItem>
+            <MenuItem value="athlete">Athlete</MenuItem>
+          </TextField>
           <input
             type="file"
             accept="image/*"

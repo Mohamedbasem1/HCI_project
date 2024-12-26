@@ -102,7 +102,10 @@ def patient_login():
         # Start gesture recognition
         response = requests.post('http://localhost:5000/gesture/start')
         print(f"Gesture recognition start response: {response.json()}")  # Add debugging statement
-        return jsonify({"success": True, "patient": patient}), 200
+        if patient.get('type') == 'kid':
+            return jsonify({"success": True, "type": "kid", "patient": patient}), 200
+        else:
+            return jsonify({"success": True, "type": "patient", "patient": patient}), 200
     else:
         return jsonify({"success": False, "message": "Invalid TUIO ID"}), 401
 
@@ -119,6 +122,34 @@ def doctor_login():
         return jsonify({"success": True, "doctor": doctor}), 200
     else:
         return jsonify({"success": False, "message": "Invalid TUIO ID"}), 401
+
+@app.route('/api/kids/login', methods=['POST'])
+def kid_login():
+    data = request.json
+    tuio_id = int(data.get('tuio_id'))  # Ensure TUIO ID is treated as an integer
+    kid = patients_collection.find_one({"tuio_id": tuio_id, "is_kid": True})
+    if kid:
+        kid['_id'] = str(kid['_id'])  # Convert ObjectId to string
+        # Start gesture recognition
+        response = requests.post('http://localhost:5000/gesture/start')
+        print(f"Gesture recognition start response: {response.json()}")  # Add debugging statement
+        return jsonify({"success": True, "kid": kid}), 200
+    else:
+        return jsonify({"success": False, "message": "Invalid TUIO ID"}), 401
+
+@app.route('/api/kids/<kid_id>/exercises', methods=['GET'])
+def get_kid_exercises(kid_id):
+    try:
+        kid = patients_collection.find_one({"_id": ObjectId(kid_id), "is_kid": True})
+        if not kid:
+            return jsonify({"error": "Kid not found"}), 404
+        injury = injuries_collection.find_one({"name": kid['injury']})
+        if not injury:
+            return jsonify({"error": "Injury not found"}), 404
+        exercises = injury.get('exercises', [])
+        return jsonify(exercises), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/api/patients/<patient_id>/exercises', methods=['GET'])
 def get_patient_exercises(patient_id):
@@ -171,13 +202,15 @@ def create_patient():
     data = request.json
     name = data.get('name', generate_random_name())
     tuio_id = data.get('tuio_id', generate_unique_tuio_id())
+    patient_type = data.get('type')  # Get patient type
     if tuio_id < 50 or patients_collection.find_one({"tuio_id": tuio_id}):
         return jsonify({"error": "Invalid or duplicate TUIO ID"}), 400
     patient = {
         "name": name,
         "tuio_id": tuio_id,
         "injury": data["injury"],
-        "exercises": data["exercises"]
+        "exercises": data["exercises"],
+        "type": patient_type  # Save patient type in the database
     }
     result = patients_collection.insert_one(patient)
     patient['_id'] = str(result.inserted_id)
@@ -239,7 +272,7 @@ def handle_bluetooth_device():
     print(f"Received Bluetooth device: {addr} - {name}")
     
     # Check if the Bluetooth address matches the doctor's address
-    if addr == "54:9A:8F:4B:C4:7A":
+    if addr in ["54:9A:8F:4B:C4:7A", "F4:B6:2D:C0:94:6C"]:
         print(f"Emitting redirect_event for doctor: {addr}")  # Add this line for debugging
         socketio.emit('redirect_event', {'url': 'http://localhost:3000/doctor'})
         return jsonify({"status": "success", "message": "Redirecting to doctor dashboard"}), 200

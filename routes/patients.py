@@ -32,7 +32,7 @@ def generate_patient_details_route():
 def patients():
     if request.method == 'GET':
         try:
-            patients = list(patients_collection.find({}, {'_id': 1, 'name': 1, 'injury': 1, 'exercises': 1, 'tuio_id': 1}))
+            patients = list(patients_collection.find({}, {'_id': 1, 'name': 1, 'injury': 1, 'exercises': 1, 'tuio_id': 1, 'type': 1}))  # Include type field
             for patient in patients:
                 patient['_id'] = str(patient['_id'])  # Convert ObjectId to string
                 for exercise in patient.get('exercises', []):
@@ -48,6 +48,7 @@ def patients():
             tuio_id = int(data.get('tuio_id', generate_unique_tuio_id()))
             injury = data.get('injury')
             exercises = data.get('exercises').split(',')
+            patient_type = data.get('type')  # Get patient type
 
             if tuio_id < 50 or patients_collection.find_one({"tuio_id": tuio_id}):
                 return jsonify({"error": "Invalid or duplicate TUIO ID"}), 400
@@ -70,7 +71,8 @@ def patients():
                 "tuio_id": tuio_id,
                 "injury": injury,
                 "exercises": exercises_list,
-                "image_path": image_path  # Save image path in the database
+                "image_path": image_path,  # Save image path in the database
+                "type": patient_type  # Save patient type in the database
             }
             result = patients_collection.insert_one(patient)
             patient['_id'] = str(result.inserted_id)

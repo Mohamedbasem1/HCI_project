@@ -1,8 +1,8 @@
-import bluetooth
+from bleak import BleakScanner
 import asyncio
 import aiohttp
 
-TARGET_BLUETOOTH_ADDRESS = "54:9A:8F:4B:C4:7A"
+TARGET_BLUETOOTH_ADDRESSES = ["54:9A:8F:4B:C4:7A", "F4:B6:2D:C0:94:6C"]
 
 async def send_bluetooth_device(addr, name):
     async with aiohttp.ClientSession() as session:
@@ -12,17 +12,20 @@ async def send_bluetooth_device(addr, name):
 async def discover_bluetooth_devices():
     while True:
         print("Discovering nearby Bluetooth devices...")
-        nearby_devices = bluetooth.discover_devices(lookup_names=True)
-        print(f"Found {len(nearby_devices)} devices")
+        devices = await BleakScanner.discover()
+        print(f"Found {len(devices)} devices")
 
-        for addr, name in nearby_devices:
+        for device in devices:
+            addr = device.address
+            name = device.name if device.name else "Unknown"
             print(f" {addr} - {name}")
             await send_bluetooth_device(addr, name)
-            if addr == TARGET_BLUETOOTH_ADDRESS:
+            if addr in TARGET_BLUETOOTH_ADDRESSES:
                 print(f"Target Bluetooth device found: {addr} - {name}")
-                return  # Stop searching once the target device is found
+                print("Target found")
+                return  
 
-        await asyncio.sleep(10)  # Wait for 10 seconds before the next discovery
+        await asyncio.sleep(10)  
 
 async def main():
     await discover_bluetooth_devices()

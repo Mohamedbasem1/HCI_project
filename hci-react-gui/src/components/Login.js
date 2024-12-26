@@ -45,41 +45,25 @@ const Login = () => {
   }, [navigate]); // Add navigate dependency
 
   const handleLogin = () => {
-    axios.post('http://localhost:5000/api/verify_tuio_id', { tuio_id: selectedTuioId })
+    axios.post('http://localhost:5000/api/patients/login', { tuio_id: selectedTuioId })
       .then(response => {
-        if (response.data.valid) {
-          axios.post('http://localhost:5000/api/patients/login', { tuio_id: selectedTuioId })
-            .then(response => {
-              localStorage.setItem('patient', JSON.stringify(response.data.patient));
-              setSnackbarMessage('Login successful');
-              setSnackbarSeverity('success');
-              setSnackbarOpen(true);
-              navigate('/patient-exercise-dashboard', { state: { patient: response.data.patient } });
-            })
-            .catch(() => {
-              axios.post('http://localhost:5000/api/doctors/login', { tuio_id: selectedTuioId })
-                .then(response => {
-                  localStorage.setItem('doctor', JSON.stringify(response.data.doctor));
-                  setSnackbarMessage('Login successful');
-                  setSnackbarSeverity('success');
-                  setSnackbarOpen(true);
-                  navigate('/doctor-dashboard', { state: { doctor: response.data.doctor } });
-                })
-                .catch(error => {
-                  setSnackbarMessage('Invalid TUIO ID');
-                  setSnackbarSeverity('error');
-                  setSnackbarOpen(true);
-                });
-            });
+        if (response.data.success) {
+          const { type, patient } = response.data;
+          if (type === 'kid') {
+            localStorage.setItem('kid', JSON.stringify(patient));
+            navigate(`/kid/exercises/${patient._id}`);
+          } else {
+            localStorage.setItem('patient', JSON.stringify(patient));
+            navigate(`/patient/exercises/${patient._id}`);
+          }
         } else {
-          setSnackbarMessage('Invalid TUIO ID');
+          setSnackbarMessage(response.data.message);
           setSnackbarSeverity('error');
           setSnackbarOpen(true);
         }
       })
       .catch(error => {
-        console.error('Error verifying TUIO ID:', error);
-        setSnackbarMessage('Error verifying TUIO ID');
+        setSnackbarMessage('Error logging in');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
       });
