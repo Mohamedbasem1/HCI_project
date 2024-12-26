@@ -5,7 +5,7 @@ import pyautogui
 import mediapipe as mp
 from deepface import DeepFace  # type: ignore
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands()

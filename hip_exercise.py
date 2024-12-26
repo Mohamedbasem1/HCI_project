@@ -3,7 +3,7 @@ import cv2
 import time
 
 # Initialize the webcam
-cap = cv2.VideoCapture(2)  
+cap = cv2.VideoCapture(2)
 
 if not cap.isOpened():
     print("Error: Cannot access the webcam")
@@ -19,9 +19,16 @@ waiting_for_disappearance = False  # Flag to wait for disappearance of classes
 detection_start_time = None  # Start time for detecting both classes
 
 required_detection_time = 0.4  # Time in seconds
+start_time = time.time()  # Record the start time
+duration = 60  # Duration in seconds (1 minute)
 
 # Run the video capture loop
 while True:
+    elapsed_time = time.time() - start_time  # Calculate elapsed time
+    if elapsed_time > duration:
+        print("1 minute elapsed. Exiting...")
+        break
+
     # Read a frame from the webcam
     ret, frame = cap.read()
 

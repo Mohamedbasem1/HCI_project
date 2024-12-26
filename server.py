@@ -17,6 +17,7 @@ import aiohttp
 import subprocess
 import sys  # Add this import
 import requests  # Add this import
+import signal  # Add this import
 
 sys.path.append(os.path.join(os.path.dirname(__file__), 'routes'))  # Add this line
 
@@ -284,7 +285,7 @@ def start_exercise():
      try:
         # Specify the Python executable from the virtual environment
         python_executable = r'.venv\Scripts\python.exe'
-        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'knee_flex.py')
+        script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'hip_exercise.py')
         environment_vars = os.environ
         print(f"Python executable: {python_executable}")
         print(f"Script path: {script_path}")
@@ -306,9 +307,19 @@ def start_exercise():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+# Store the process handle for lazer.py
+lazer_process = None
+
 @app.route('/api/face_login', methods=['POST'])
 def face_login():
+    global lazer_process
     try:
+        # Terminate the lazer.py process if it is running
+        if lazer_process:
+            lazer_process.terminate()
+            lazer_process.wait()
+            print("Terminated lazer.py script")
+
         print("Starting face recognition script...")  # Add this line for debugging
         print(f"Python executable: {sys.executable}")  # Add this line for debugging
         print(f"Python version: {sys.version}")  # Add this line for debugging
@@ -331,6 +342,13 @@ def face_login():
     except Exception as e:
         print(f"Error during face login: {e}")  # Add this line for debugging
         return jsonify({"error": str(e)}), 500
+    finally:
+        # Restart the lazer.py process
+        try:
+            lazer_process = subprocess.Popen([sys.executable, 'lazer.py'])
+            print("Restarted lazer.py script")
+        except Exception as e:
+            print(f"Failed to restart lazer.py script: {e}")
 
 @app.after_request
 def after_request(response):
@@ -358,7 +376,7 @@ if __name__ == '__main__':
     
     # Start lazer.py script
     try:
-        subprocess.Popen([sys.executable, 'lazer.py'])
+        lazer_process = subprocess.Popen([sys.executable, 'lazer.py'])
         print("Started lazer.py script")
     except Exception as e:
         print(f"Failed to start lazer.py script: {e}")
